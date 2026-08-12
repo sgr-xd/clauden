@@ -10,7 +10,7 @@
       "name": "clauden",
       "description": "Posts to a webhook when a session starts and when the model or reasoning effort changes.",
       "source": "./",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "category": "monitoring",
       "tags": [
         "monitoring",
