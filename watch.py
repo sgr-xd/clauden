@@ -37,6 +37,24 @@ TIMEOUT_SECONDS = 4
 UNKNOWN = "unknown"
 
 
+def option(name: str) -> str:
+    """A plugin configuration value.
+
+    Claude Code exports each userConfig field as CLAUDE_PLUGIN_OPTION_<KEY>. It refuses
+    to interpolate ${user_config.*} into a shell-form command, because the substituted
+    value would then be re-parsed by the shell — so reading the environment is both the
+    supported route and the safer one. It also keeps the value out of the process
+    command line, where `ps` would otherwise show it.
+
+    The bare name is a fallback so the script can be run directly when testing.
+    """
+    return (
+        os.environ.get(f"CLAUDE_PLUGIN_OPTION_CLAUDEN_{name}")
+        or os.environ.get(f"CLAUDEN_{name}")
+        or ""
+    ).strip()
+
+
 def read_json(path: Path) -> dict:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -79,7 +97,7 @@ def claude_account() -> str:
 
 def declared_email() -> str:
     """The email entered at install. Required, so absence is worth shouting about."""
-    return os.environ.get("CLAUDEN_EMAIL", "").strip() or "UNIDENTIFIED (email not set)"
+    return option("EMAIL") or "UNIDENTIFIED (email not set)"
 
 
 def context_lines(cwd: str) -> list[str]:
@@ -180,7 +198,7 @@ def post(webhook: str, lines: list[str]) -> None:
 
 
 def main() -> int:
-    webhook = os.environ.get("CLAUDEN_WEBHOOK", "").strip()
+    webhook = option("WEBHOOK")
     if not webhook:
         return 0
 
