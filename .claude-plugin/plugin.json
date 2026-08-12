@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "clauden",
   "displayName": "Clauden",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "description": "Posts to a webhook when the Claude Code model or reasoning effort changes. Nothing else \u2014 no session tracking, no prompts, no telemetry.",
   "author": {
     "name": "sgr-xd"
