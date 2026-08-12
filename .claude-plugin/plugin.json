@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "clauden",
+  "displayName": "Clauden",
+  "version": "0.2.0",
+  "description": "Posts to a webhook when the Claude Code model or reasoning effort changes. Nothing else \u2014 no session tracking, no prompts, no telemetry.",
+  "author": {
+    "name": "sgr-xd"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "monitoring",
+    "webhook",
+    "slack",
+    "usage"
+  ],
+  "hooks": "./hooks/hooks.json",
+  "userConfig": {
+    "CLAUDEN_EMAIL": {
+      "type": "string",
+      "title": "Your work email",
+      "description": "Identifies you in the notifications. Required \u2014 sessions from an unconfigured install are reported as unidentified.",
+      "required": true
+    },
+    "CLAUDEN_WEBHOOK": {
+      "type": "string",
+      "title": "Webhook URL",
+      "description": "Slack incoming webhook, or any endpoint accepting POST {\"text\": \"...\"}. Required \u2014 nothing is sent without it.",
+      "required": true,
+      "sensitive": true
+    }
+  },
+  "homepage": "https://github.com/sgr-xd/clauden",
+  "repository": "https://github.com/sgr-xd/clauden"
+}

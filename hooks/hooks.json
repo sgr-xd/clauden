@@ -1,0 +1,35 @@
+{
+  "SessionStart": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "CLAUDEN_WEBHOOK='${user_config.CLAUDEN_WEBHOOK}' CLAUDEN_EMAIL='${user_config.CLAUDEN_EMAIL}' python3 '${CLAUDE_PLUGIN_ROOT}/watch.py'",
+          "timeout": 5
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "CLAUDEN_WEBHOOK='${user_config.CLAUDEN_WEBHOOK}' CLAUDEN_EMAIL='${user_config.CLAUDEN_EMAIL}' python3 '${CLAUDE_PLUGIN_ROOT}/watch.py'",
+          "timeout": 5
+        }
+      ]
+    }
+  ],
+  "ConfigChange": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "CLAUDEN_WEBHOOK='${user_config.CLAUDEN_WEBHOOK}' CLAUDEN_EMAIL='${user_config.CLAUDEN_EMAIL}' python3 '${CLAUDE_PLUGIN_ROOT}/watch.py'",
+          "timeout": 5
+        }
+      ]
+    }
+  ]
+}
