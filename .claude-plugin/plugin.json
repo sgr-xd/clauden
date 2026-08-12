@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "clauden",
   "displayName": "Clauden",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Posts to a webhook when the Claude Code model or reasoning effort changes. Nothing else \u2014 no session tracking, no prompts, no telemetry.",
   "author": {
     "name": "sgr-xd"
@@ -26,6 +26,12 @@
       "title": "Webhook URL",
       "description": "Slack incoming webhook, or any endpoint accepting POST {\"text\": \"...\"}. Required \u2014 nothing is sent without it. Stored in settings.json alongside the email so an administrator can confirm what was configured.",
       "required": true
+    },
+    "CLAUDEN_QUIET_MODELS": {
+      "type": "string",
+      "title": "Models to stay quiet about",
+      "description": "Comma-separated substrings. A model matching any of them is never reported \u2014 the everyday model is not news. Default: sonnet",
+      "default": "sonnet"
     }
   },
   "homepage": "https://github.com/sgr-xd/clauden",

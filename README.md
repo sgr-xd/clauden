@@ -4,8 +4,11 @@ A Claude Code plugin that posts to a webhook when a session starts and when some
 changes their **model** or **reasoning effort**. That is all it does — no prompt capture,
 no session tracking, no server to run.
 
+Sonnet is silent by default — the everyday model is not news. You hear about the
+expensive ones.
+
 ```
-*alice@company.com* started a session
+*alice@company.com* is working on `claude-opus-5`
 • model `claude-opus-5` · effort `high`
 • account `team@company.com`
 • device `alice@macbook`
@@ -50,6 +53,7 @@ Fill in both fields. Neither can be left empty:
 |---|---|
 | **Your work email** | `alice@company.com` |
 | **Webhook URL** | `https://hooks.slack.com/services/T…/B…/…` |
+| **Models to stay quiet about** | `sonnet` (the default) — comma-separated substrings |
 
 In the dialog: use `↑` `↓` to move between rows, type directly into the highlighted row,
 then select **Save configuration** and press Enter. Pressing `Esc` discards everything.
@@ -80,8 +84,11 @@ Send any message. When the turn ends you should see this in your channel:
 • dir `/Users/alice/work/api`
 ```
 
-If it arrives, setup is done. To see a change notification, run `/model`, pick a different
-model, and send another message.
+The install message is sent whatever the model, because its job is to confirm the setup
+works. After that the quiet list applies.
+
+To see a change notification, run `/model`, pick something outside the quiet list, and send
+another message.
 
 ### Getting a Slack webhook
 
@@ -134,16 +141,22 @@ somewhere that is fine with that.
 
 ## When messages are sent
 
-| Event | Message |
-|---|---|
-| First run on a machine | `installed clauden` |
-| Session start | `started a session` |
-| Model or effort changed | `changed model` / `changed effort`, with `before → after` |
-| Plugin disabled | ⚠️ `disabled clauden` — best effort, see below |
+| Event | Message | Subject to the quiet list |
+|---|---|---|
+| First run on a machine | `installed clauden` | no — always sent |
+| First completed turn of a session | `is working on <model>` | yes |
+| Model or effort changed | `changed model` / `changed effort`, with `before → after` | yes |
+| Plugin disabled | ⚠️ `disabled clauden` — best effort, see below | no |
 
-Changes are reported **once**, on the first turn after the change — not on every message.
-Switching model and then sending nothing produces no notification until the next session
-starts, which reports the current model anyway.
+**Opening a session sends nothing.** A session start reports what the default is, not a
+decision someone made. The first *completed turn* is the signal, because it means the model
+was actually used — open a session and walk away and you will hear nothing.
+
+**Changes are reported once**, on the first turn after the change, not on every message.
+
+**The quiet list applies to the model you land on.** Moving to Opus is reported; moving back
+to Sonnet is not. You hear about people reaching for the expensive model, not about them
+returning to the everyday one.
 
 ## How it works
 
@@ -162,6 +175,10 @@ Effort is absent from `SessionStart`, appearing only in tool-use context. It is 
 omitted from the start message rather than guessed, and learning it for the first time is
 never reported as a change. Without that rule every session would open with a false
 "effort changed" alert.
+
+Sessions are told apart by the `session_id` in the hook payload, compared against the last
+one seen. That is what makes "the first turn of a session" distinguishable from "another
+turn of the same one".
 
 Configuration is read from `CLAUDE_PLUGIN_OPTION_*`, which Claude Code exports to the hook.
 Interpolating `${user_config.*}` into a hook command is refused — the substituted value
@@ -186,7 +203,7 @@ the process command line.
 | | |
 |---|---|
 | Your email and webhook URL | `~/.claude/settings.json` under `pluginConfigs`, in plain text so an administrator can confirm what was configured |
-| Last seen model and effort | `~/.claude/.clauden.json` |
+| Last seen model, effort and session | `~/.claude/.clauden.json` |
 
 ## Requirements
 

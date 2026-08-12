@@ -37,6 +37,17 @@ TIMEOUT_SECONDS = 4
 UNKNOWN = "unknown"
 
 
+def is_quiet(model: str) -> bool:
+    """Whether this model is the everyday one and therefore not worth reporting.
+
+    Matching is on substrings because model identifiers carry suffixes — `sonnet`
+    should cover `claude-sonnet-5` and `claude-sonnet-5[1m]` alike.
+    """
+    patterns = [p.strip().lower() for p in (option("QUIET_MODELS") or "sonnet").split(",")]
+    lowered = model.lower()
+    return any(p and p in lowered for p in patterns)
+
+
 def option(name: str) -> str:
     """A plugin configuration value.
 
@@ -138,11 +149,16 @@ def still_enabled() -> bool:
     return True
 
 
-def started_message(model: str, effort: str, cwd: str) -> list[str]:
+def working_message(model: str, effort: str, cwd: str) -> list[str]:
+    """Reported on the first completed turn of a session, not when it opens.
+
+    A session opening on a model says only what the default is. A completed turn says
+    the model was actually used, which is the thing worth knowing.
+    """
     state = f"• model `{model}`"
     if effort != UNKNOWN:
         state += f" · effort `{effort}`"
-    return [f"*{declared_email()}* started a session", state, *context_lines(cwd)]
+    return [f"*{declared_email()}* is working on `{model}`", state, *context_lines(cwd)]
 
 
 def changed_message(
@@ -222,18 +238,24 @@ def main() -> int:
             post(webhook, disabled_message(cwd))
         return 0
 
+    session = str(hook.get("session_id") or "")
+
     if not previous:
         # No state file means this machine has never run clauden: a first install.
+        # Always sent, whatever the model — it confirms the setup works.
         post(webhook, installed_message(model, effort, cwd))
     elif event == "SessionStart":
-        # Always announce a new session, so the channel shows what each one runs on
-        # rather than only what changed.
-        post(webhook, started_message(model, effort, cwd))
+        # Deliberately silent. A session opening reports the default, not a decision;
+        # the first completed turn below reports actual use.
+        pass
+    elif session and session != previous.get("session"):
+        # First completed turn of a new session: the model was actually used.
+        if not is_quiet(model):
+            post(webhook, working_message(model, effort, cwd))
     else:
-        # A first run has nothing to compare against. Recording the baseline silently
-        # avoids telling everyone that everyone "switched" the moment this is installed.
-        changes = detect_changes(previous, model, effort) if previous else []
-        if changes:
+        changes = detect_changes(previous, model, effort)
+        # Switching *to* the everyday model is not news; switching away from it is.
+        if changes and not is_quiet(model):
             post(webhook, changed_message(changes, model, effort, cwd))
 
     try:
@@ -246,6 +268,7 @@ def main() -> int:
                     "effort": effort
                     if effort != UNKNOWN
                     else previous.get("effort", UNKNOWN),
+                    "session": session or previous.get("session", ""),
                 }
             ),
             encoding="utf-8",
