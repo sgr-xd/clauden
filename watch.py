@@ -261,6 +261,10 @@ def main() -> int:
     try:
         STATE.parent.mkdir(parents=True, exist_ok=True)
         # Never overwrite a known effort with UNKNOWN from an event that omits it.
+        # SessionStart must not record the session: "session" is the last one whose first
+        # completed turn was handled, and recording it here would make that turn look like
+        # an old session's, so it would never announce the model.
+        seen = previous.get("session", "") if event == "SessionStart" else session
         STATE.write_text(
             json.dumps(
                 {
@@ -268,7 +272,7 @@ def main() -> int:
                     "effort": effort
                     if effort != UNKNOWN
                     else previous.get("effort", UNKNOWN),
-                    "session": session or previous.get("session", ""),
+                    "session": seen or previous.get("session", ""),
                 }
             ),
             encoding="utf-8",
